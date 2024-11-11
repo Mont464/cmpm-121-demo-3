@@ -5,7 +5,7 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 document.title = APP_NAME;
 
 const button = document.createElement("button");
-button.innerHTML = "Button";
+button.innerHTML = "Click Me";
 app.append(button);
 
 button.onclick = () => {
