@@ -13,6 +13,7 @@ const gameTitle = document.createElement("h1");
 gameTitle.innerHTML = APP_NAME;
 app.append(gameTitle);
 
+//Grouping aspects of the app to allow easy edits and reference
 class settings {
   oakesLocation = leaflet.latLng(36.98967, -122.06283);
   mapZoom = 19;
@@ -29,6 +30,7 @@ mapDiv.style.height = "80vh";
 mapDiv.style.width = "95vw";
 app.append(mapDiv);
 
+//Create map visual using Leaflet framework
 const leafletMap = leaflet.map(mapDiv, {
   center: gameSettings.oakesLocation,
   zoom: gameSettings.mapZoom,
@@ -38,6 +40,7 @@ const leafletMap = leaflet.map(mapDiv, {
   scrollWheelZoom: gameSettings.zoomable,
 });
 
+//Make contribution
 leaflet
   .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: gameSettings.mapZoom,
@@ -55,6 +58,7 @@ playerLocation.addTo(leafletMap);
 const playerInventory: Coin[] = [];
 const playerCoordinates = gameSettings.oakesLocation; //for later use when adding movement
 
+//Determine which tiles should have caches
 for (
   let i = -gameSettings.maxCacheDistance;
   i < gameSettings.maxCacheDistance;
@@ -80,7 +84,9 @@ interface Cache {
   coordinates: number[];
 }
 
+//Creates an interactible cashe rectangle at the tile coordinate given
 function createCoinCache(i: number, j: number) {
+  //finds coordinates of the cache based on the player
   const cacheCoords = [
     playerCoordinates.lat + i * gameSettings.tileSize,
     playerCoordinates.lng + j * gameSettings.tileSize,
@@ -94,10 +100,14 @@ function createCoinCache(i: number, j: number) {
     ],
   ]);
 
+  //creates cache visual
   const cacheBox = leaflet.rectangle(cacheBounds);
   cacheBox.addTo(leafletMap);
 
+  //Create a popup for the cache showing it's coins
   const popupDiv = document.createElement("div");
+
+  //fill cache object with the respective coins
   const coinAmount = Math.ceil(luck([i, j, "firstCoins"].toString()) * 10);
   const newCacheCoins: Cache = { coinsHeld: [], coordinates: cacheCoords };
   for (let a = 0; a < coinAmount; a++) {
@@ -110,6 +120,7 @@ function createCoinCache(i: number, j: number) {
   cacheBox.bindPopup(popupDiv);
 }
 
+//fill the cache's popup with coin text and buttons to collect/deposit
 function updateCacheText(cache: Cache, cacheDiv: HTMLDivElement) {
   cacheDiv.innerHTML = "<div>Cache at " +
     cache.coordinates[0] +
@@ -117,13 +128,15 @@ function updateCacheText(cache: Cache, cacheDiv: HTMLDivElement) {
     cache.coordinates[1] +
     "<br></div>";
 
+  //Make 'div' elements for the coin text and buttons below for collecting
   for (let i = 0; i < cache.coinsHeld.length; i++) {
     cacheDiv.innerHTML += `<div>${
       cache.coinsHeld[i].id
     }</div><button id=\"collect${i}\">collect</button>`;
   }
-  cacheDiv.innerHTML += `<br><button id=\"deposit\">deposit</button>`;
+  cacheDiv.innerHTML += `<br><button id=\"deposit\">deposit</button>`; //deposit button
 
+  //Implements click of collect buttons
   for (let i = 0; i < cache.coinsHeld.length; i++) {
     cacheDiv
       .querySelector<HTMLButtonElement>(`[id=\'collect${i}\']`)!
@@ -139,11 +152,13 @@ function updateCacheText(cache: Cache, cacheDiv: HTMLDivElement) {
         })(i));
   }
 
+  //Implements click of deposit button
   cacheDiv
     .querySelector<HTMLButtonElement>(`[id=\'deposit\']`)!
     .addEventListener("click", () => depositCoin(cache, cacheDiv));
 }
 
+//Updates the tooltip on the player marker to show the correct inventory contents
 function updatePlayerText() {
   let inventoryText = "";
   for (const coin of playerInventory) {
@@ -154,21 +169,25 @@ function updatePlayerText() {
   );
 }
 
+//Creates a prompt for the player to choose which coin to deposit
 function depositCoin(cache: Cache, cacheDiv: HTMLDivElement) {
+  //check if the player has coins to deposit
   if (playerInventory.length < 1) {
     alert("No coins to deposit");
     return;
   }
 
+  //Make prompt text with the prompt and coin options
   let promptText = "Deposit\nPlease enter the number of the coin to deposit:\n";
   for (let i = 0; i < playerInventory.length; i++) {
     promptText += i + " -- " + playerInventory[i].id + "\n";
   }
 
+  //Gets the player's response and places it into the cache's inventory if the entry is proper
   const choice = prompt(promptText, "0");
   if (choice != null && choice != "") {
     const choiceInt = Number(choice);
-    if (choiceInt < playerInventory.length && choiceInt > 0) {
+    if (choiceInt < playerInventory.length && choiceInt >= 0) {
       cache.coinsHeld.push(playerInventory[choiceInt]);
       updateCacheText(cache, cacheDiv);
     }
