@@ -102,11 +102,7 @@ function createCoinCache(i: number, j: number) {
   const newCacheCoins: Cache = { coinsHeld: [], coordinates: cacheCoords };
   for (let a = 0; a < coinAmount; a++) {
     const newCoin: Coin = {
-      id: cacheCoords[0] +
-        ":" +
-        cacheCoords[1] +
-        "#" +
-        a,
+      id: cacheCoords[0] + ":" + cacheCoords[1] + "#" + a,
     };
     newCacheCoins.coinsHeld.push(newCoin);
   }
@@ -115,8 +111,11 @@ function createCoinCache(i: number, j: number) {
 }
 
 function updateCacheText(cache: Cache, cacheDiv: HTMLDivElement) {
-  cacheDiv.innerHTML = "<div>Cache at " + cache.coordinates[0] + ": " +
-    cache.coordinates[1] + "<br></div>";
+  cacheDiv.innerHTML = "<div>Cache at " +
+    cache.coordinates[0] +
+    ": " +
+    cache.coordinates[1] +
+    "<br></div>";
 
   for (let i = 0; i < cache.coinsHeld.length; i++) {
     cacheDiv.innerHTML += `<div>${
@@ -125,7 +124,8 @@ function updateCacheText(cache: Cache, cacheDiv: HTMLDivElement) {
   }
 
   for (let i = 0; i < cache.coinsHeld.length; i++) {
-    cacheDiv.querySelector<HTMLButtonElement>(`[id=\'collect${i}\']`)!
+    cacheDiv
+      .querySelector<HTMLButtonElement>(`[id=\'collect${i}\']`)!
       .addEventListener("click", () =>
         ((index) => {
           if (index >= 0) {
