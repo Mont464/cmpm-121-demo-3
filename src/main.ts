@@ -122,6 +122,7 @@ function updateCacheText(cache: Cache, cacheDiv: HTMLDivElement) {
       cache.coinsHeld[i].id
     }</div><button id=\"collect${i}\">collect</button>`;
   }
+  cacheDiv.innerHTML += `<br><button id=\"deposit\">deposit</button>`;
 
   for (let i = 0; i < cache.coinsHeld.length; i++) {
     cacheDiv
@@ -132,15 +133,44 @@ function updateCacheText(cache: Cache, cacheDiv: HTMLDivElement) {
             playerInventory.push(cache.coinsHeld[index]);
             cache.coinsHeld.splice(index, 1);
 
-            let inventoryText = "";
-            for (const coin of playerInventory) {
-              inventoryText += coin.id + "<br>";
-            }
-            playerLocation.bindTooltip(
-              "Current Location<br>Inventory:<br>" + inventoryText,
-            );
+            updatePlayerText();
             updateCacheText(cache, cacheDiv);
           }
         })(i));
+  }
+
+  cacheDiv
+    .querySelector<HTMLButtonElement>(`[id=\'deposit\']`)!
+    .addEventListener("click", () => depositCoin(cache, cacheDiv));
+}
+
+function updatePlayerText() {
+  let inventoryText = "";
+  for (const coin of playerInventory) {
+    inventoryText += coin.id + "<br>";
+  }
+  playerLocation.bindTooltip(
+    "Current Location<br>Inventory:<br>" + inventoryText,
+  );
+}
+
+function depositCoin(cache: Cache, cacheDiv: HTMLDivElement) {
+  if (playerInventory.length < 1) {
+    alert("No coins to deposit");
+    return;
+  }
+
+  let promptText = "Deposit\nPlease enter the number of the coin to deposit:\n";
+  for (let i = 0; i < playerInventory.length; i++) {
+    promptText += i + " -- " + playerInventory[i].id + "\n";
+  }
+
+  const choice = prompt(promptText, "0");
+  if (choice != null && choice != "") {
+    const choiceInt = Number(choice);
+    if (choiceInt < playerInventory.length && choiceInt > 0) {
+      cache.coinsHeld.push(playerInventory[choiceInt]);
+      updateCacheText(cache, cacheDiv);
+    }
   }
 }
