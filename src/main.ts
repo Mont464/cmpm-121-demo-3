@@ -50,9 +50,7 @@ leaflet
   .addTo(leafletMap);
 
 const playerLocation = leaflet.marker(gameSettings.oakesLocation);
-playerLocation.bindTooltip(
-  "Current Location<br>Inventory:<br>No Coins Collected",
-);
+playerLocation.bindTooltip("Current Location<br>Inventory:<br>Empty");
 playerLocation.addTo(leafletMap);
 
 const playerInventory: Coin[] = [];
@@ -164,6 +162,11 @@ function updatePlayerText() {
   for (const coin of playerInventory) {
     inventoryText += coin.id + "<br>";
   }
+
+  if (inventoryText == "") {
+    inventoryText = "Empty";
+  }
+
   playerLocation.bindTooltip(
     "Current Location<br>Inventory:<br>" + inventoryText,
   );
@@ -184,12 +187,18 @@ function depositCoin(cache: Cache, cacheDiv: HTMLDivElement) {
   }
 
   //Gets the player's response and places it into the cache's inventory if the entry is proper
-  const choice = prompt(promptText, "0");
+  const choice = prompt(promptText);
   if (choice != null && choice != "") {
     const choiceInt = Number(choice);
     if (choiceInt < playerInventory.length && choiceInt >= 0) {
       cache.coinsHeld.push(playerInventory[choiceInt]);
+      playerInventory.splice(choiceInt, 1);
+
+      updatePlayerText();
       updateCacheText(cache, cacheDiv);
+    } else {
+      alert("Invalid entry: Choice out of range");
+      return;
     }
   }
 }
