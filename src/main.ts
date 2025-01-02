@@ -3,6 +3,7 @@ import "leaflet/dist/leaflet.css";
 import "./style.css";
 import "./leafletWorkaround.ts";
 import luck from "./luck.ts";
+import { Board } from "./board.ts";
 
 const APP_NAME = "Map Cache";
 const app = document.querySelector<HTMLDivElement>("#app")!;
@@ -53,33 +54,28 @@ const playerLocation = leaflet.marker(gameSettings.oakesLocation);
 playerLocation.bindTooltip("Current Location<br>Inventory:<br>Empty");
 playerLocation.addTo(leafletMap);
 
-const playerInventory: Coin[] = [];
+//const playerInventory: Coin[] = [];
 const playerCoordinates = gameSettings.oakesLocation; //for later use when adding movement
 
-//Determine which tiles should have caches
+const gameBoard = new Board(
+  gameSettings.tileSize,
+  gameSettings.maxCacheDistance,
+  playerCoordinates,
+  gameSettings.cacheSpawnProbability
+);
+
 for (
-  let i = -gameSettings.maxCacheDistance;
-  i < gameSettings.maxCacheDistance;
+  let i = -gameBoard.tileVisibilityRadius;
+  i < gameBoard.tileVisibilityRadius;
   i++
 ) {
   for (
-    let j = -gameSettings.maxCacheDistance;
-    j < gameSettings.maxCacheDistance;
+    let j = -gameBoard.tileVisibilityRadius;
+    j < gameBoard.tileVisibilityRadius;
     j++
   ) {
-    if (luck([i, j].toString()) < gameSettings.cacheSpawnProbability) {
-      createCoinCache(i, j);
-    }
+    createCoinCache(i, j);
   }
-}
-
-interface Coin {
-  id: string;
-}
-
-interface Cache {
-  coinsHeld: Coin[];
-  coordinates: number[];
 }
 
 //Creates an interactible cashe rectangle at the tile coordinate given
@@ -90,20 +86,18 @@ function createCoinCache(i: number, j: number) {
     playerCoordinates.lng + j * gameSettings.tileSize,
   ];
 
-  const cacheBounds = leaflet.latLngBounds([
-    cacheCoords,
-    [
-      cacheCoords[0] + gameSettings.tileSize,
-      cacheCoords[1] + gameSettings.tileSize,
-    ],
-  ]);
-
+  const cell = gameBoard.getCellForPoint(leaflet.latLng(cacheCoords));
+  if (cell == null) {
+    return;
+  }
   //creates cache visual
-  const cacheBox = leaflet.rectangle(cacheBounds);
+  const cacheBox = leaflet.rectangle(
+    gameBoard.getCellBounds(cell)
+  );
   cacheBox.addTo(leafletMap);
 
   //Create a popup for the cache showing it's coins
-  const popupDiv = document.createElement("div");
+  /*const popupDiv = document.createElement("div");
 
   //fill cache object with the respective coins
   const coinAmount = Math.ceil(luck([i, j, "firstCoins"].toString()) * 10);
@@ -114,12 +108,27 @@ function createCoinCache(i: number, j: number) {
     };
     newCacheCoins.coinsHeld.push(newCoin);
   }
-  updateCacheText(newCacheCoins, popupDiv);
-  cacheBox.bindPopup(popupDiv);
+  updateCacheText(newCacheCoins, popupDiv);*/
+
+  cacheBox.on("click", () => openCachePopup(leaflet.latLng(cacheCoords)));
 }
 
+function openCachePopup(coords: leaflet.latLng): void {
+  const cell = gameBoard.getCellForPoint(coords)!;
+  let cacheMessage =
+    "<div>Cache at " + coords.lat + ": " + coords.lng + "<br></div>";
+
+  for (let i = 0; i < cell.coinsHeld.length; i++) {
+    cacheMessage += `<div>${cell.coinsHeld[i].id}</div><button id=\"collect${i}\">collect</button>`;
+  }
+  cacheMessage += `<br><button id=\"deposit\">deposit</button>`; //deposit button
+
+  leaflet.popup().setLatLng(coords).setContent(cacheMessage).openOn(leafletMap);
+}
+
+/*
 //fill the cache's popup with coin text and buttons to collect/deposit
-function updateCacheText(cache: Cache, cacheDiv: HTMLDivElement) {
+function updateCacheText(cache: CoinCache, cacheDiv: HTMLDivElement) {
   cacheDiv.innerHTML = "<div>Cache at " +
     cache.coordinates[0] +
     ": " +
@@ -173,7 +182,7 @@ function updatePlayerText() {
 }
 
 //Creates a prompt for the player to choose which coin to deposit
-function depositCoin(cache: Cache, cacheDiv: HTMLDivElement) {
+function depositCoin(cache: CoinCache, cacheDiv: HTMLDivElement) {
   //check if the player has coins to deposit
   if (playerInventory.length < 1) {
     alert("No coins to deposit");
@@ -202,3 +211,4 @@ function depositCoin(cache: Cache, cacheDiv: HTMLDivElement) {
     }
   }
 }
+*/
