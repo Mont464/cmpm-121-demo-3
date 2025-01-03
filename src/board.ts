@@ -15,7 +15,7 @@ export class Board {
     tileWidth: number,
     tileVisibilityRadius: number,
     initialCoordinates: leaflet.latLng,
-    spawnProbability: number
+    spawnProbability: number,
   ) {
     this.tileWidth = tileWidth;
     this.tileVisibilityRadius = tileVisibilityRadius;

@@ -107,7 +107,11 @@ function openCachePopup(coords: leaflet.latLng): void {
 function updateCacheText(cell: CoinCache, popup: leaflet.Popup) {
   const coords = cell.getCoords();
   let cacheMessage =
-    "<div>Cache at " + coords.lat.toFixed(4) + ": " + coords.lng.toFixed(4) + "<br></div>";
+    "<div>Cache at " +
+    coords.lat.toFixed(4) +
+    ": " +
+    coords.lng.toFixed(4) +
+    "<br></div>";
 
   for (let i = 0; i < cell.coinsHeld.length; i++) {
     cacheMessage += `<div>${cell.coinsHeld[i].id}</div><button id=\"collect${i}\">collect</button>`;
@@ -115,7 +119,7 @@ function updateCacheText(cell: CoinCache, popup: leaflet.Popup) {
   cacheMessage += `<br><button id=\"deposit\">deposit</button>`; //deposit button
 
   coords.lat += 0.5 * gameSettings.tileSize;
-  coords.lng += 0.5 * gameSettings.tileSize;       //moving popup location to the center of the rectangle
+  coords.lng += 0.5 * gameSettings.tileSize; //moving popup location to the center of the rectangle
   popup.setLatLng(coords).setContent(cacheMessage).openOn(leafletMap);
 
   const popupDiv = popup.getElement();
@@ -132,7 +136,8 @@ function updateCacheText(cell: CoinCache, popup: leaflet.Popup) {
             popup.close();
             updatePlayerText();
           }
-        })(i));
+        })(i)
+      );
   }
 
   //Implements click of deposit button
@@ -153,7 +158,7 @@ function updatePlayerText() {
   }
 
   playerLocation.bindTooltip(
-    "Current Location<br>Inventory:<br>" + inventoryText,
+    "Current Location<br>Inventory:<br>" + inventoryText
   );
 }
 
@@ -187,4 +192,3 @@ function depositCoin(cache: CoinCache, popup: leaflet.Popup) {
     }
   }
 }
-

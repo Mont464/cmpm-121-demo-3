@@ -21,12 +21,17 @@ class cacheImpl implements CoinCache {
     this.coinsHeld = [];
     const coinAmount = Math.ceil(
       luck(
-        [this.coordinates.lat, this.coordinates.lng, "firstCoins"].toString(),
-      ) * 5, //FIXME
+        [this.coordinates.lat, this.coordinates.lng, "firstCoins"].toString()
+      ) * 5 //FIXME
     );
     for (let a = 0; a < coinAmount; a++) {
       const newCoin: Coin = {
-        id: Math.floor(this.coordinates.lat * 1e4) + ":" + Math.floor(this.coordinates.lng * 1e4) + "#" + a,
+        id:
+          Math.floor(this.coordinates.lat * 1e4) +
+          ":" +
+          Math.floor(this.coordinates.lng * 1e4) +
+          "#" +
+          a,
       };
       this.coinsHeld.push(newCoin);
     }
