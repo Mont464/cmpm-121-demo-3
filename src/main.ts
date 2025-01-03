@@ -113,7 +113,7 @@ function updateCacheText(cell: CoinCache, popup: leaflet.Popup) {
   for (let i = 0; i < cell.coinsHeld.length; i++) {
     cacheMessage += `<div>${
       cell.coinsHeld[i].id
-      }</div><button id=\"collect${i}\">collect</button>`;
+    }</div><button id=\"collect${i}\">collect</button>`;
   }
   cacheMessage += `<br><button id=\"deposit\">deposit</button>`; //deposit button
 
