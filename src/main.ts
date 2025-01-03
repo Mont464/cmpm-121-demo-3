@@ -2,7 +2,6 @@ import leaflet from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./style.css";
 import "./leafletWorkaround.ts";
-import luck from "./luck.ts";
 import { Board } from "./board.ts";
 import { Coin, CoinCache } from "./cache.ts";
 
