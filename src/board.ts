@@ -1,8 +1,7 @@
 import leaflet from "leaflet";
 import "./leafletWorkaround.ts";
 import "./cache.ts";
-import { CoinCache } from "./cache.ts";
-import { createCache } from "./cache.ts";
+import { CoinCache, createCache } from "./cache.ts";
 import luck from "./luck.ts";
 
 export class Board {
@@ -63,7 +62,7 @@ export class Board {
   getCellForPoint(point: leaflet.LatLng): CoinCache | null {
     const cell = this.knownCells.get(point.toString());
     if (cell == undefined) {
-        return null;
+      return null;
     }
     return cell;
   }

@@ -2,7 +2,7 @@ import leaflet from "leaflet";
 import "./leafletWorkaround.ts";
 import luck from "./luck.ts";
 
-interface Coin {
+export interface Coin {
   id: string;
 }
 
@@ -21,19 +21,19 @@ class cacheImpl implements CoinCache {
     this.coinsHeld = [];
     const coinAmount = Math.ceil(
       luck(
-        [this.coordinates.lat, this.coordinates.lng, "firstCoins"].toString()
-      ) * 5                                                                    //FIXME
+        [this.coordinates.lat, this.coordinates.lng, "firstCoins"].toString(),
+      ) * 5, //FIXME
     );
     for (let a = 0; a < coinAmount; a++) {
       const newCoin: Coin = {
-        id: this.coordinates.lat + ":" + this.coordinates.lng + "#" + a,
+        id: Math.floor(this.coordinates.lat * 1e4) + ":" + Math.floor(this.coordinates.lng * 1e4) + "#" + a,
       };
       this.coinsHeld.push(newCoin);
     }
   }
 
   getCoords(): leaflet.LatLng {
-    return this.coordinates;
+    return leaflet.latLng(this.coordinates.lat, this.coordinates.lng);
   }
 }
 
