@@ -76,8 +76,13 @@ const gameBoard = new Board(
   gameSettings.maxCacheDistance,
 );
 let boxArray: leaflet.Rectangle = [];
+const cacheMememtos: Map<string, string> = new Map<string, string>();
 
 refreshBoard();
+
+function cellToString(cell: Cell) {
+  return `${cell.i},${cell.j}`;
+}
 
 function refreshBoard() {
   gameBoard.clear();
@@ -87,7 +92,7 @@ function refreshBoard() {
   boxArray = [];
   const cells = gameBoard.getCellsNearPoint(playerCoordinates);
   for (const cell of cells) {
-    const key = `${cell.i},${cell.j}`;
+    const key = cellToString(cell);
     if (luck(key) < gameSettings.cacheSpawnProbability) {
       createCacheVisual(cell);
     }
@@ -109,7 +114,10 @@ function createCacheVisual(cell: Cell) {
 function openCachePopup(coords: leaflet.LatLng): void {
   const cell = gameBoard.getCellForPoint(coords)!;
   const newPopup = leaflet.popup();
-  const newCache = createCache(cell);
+  let newCache = createCache(cell);
+  if (cacheMememtos.has(cellToString(cell))) {
+    newCache = JSON.parse(cacheMememtos.get(cellToString(cell))!);
+  }
   updateCacheText(newCache, newPopup, cell);
 }
 
@@ -139,6 +147,7 @@ function updateCacheText(cache: CoinCache, popup: leaflet.Popup, cell: Cell) {
           if (index >= 0) {
             playerInventory.push(cache.coinsHeld[index]);
             cache.coinsHeld.splice(index, 1);
+            cacheMememtos.set(cellToString(cell), JSON.stringify(cache));
             popup.close();
             updatePlayerText();
           }
@@ -148,7 +157,7 @@ function updateCacheText(cache: CoinCache, popup: leaflet.Popup, cell: Cell) {
   //Implements click of deposit button
   popupDiv
     .querySelector<HTMLButtonElement>(`[id=\'deposit\']`)!
-    .addEventListener("click", () => depositCoin(cache, popup));
+    .addEventListener("click", () => depositCoin(cache, popup, cell));
 }
 
 //Updates the tooltip on the player marker to show the correct inventory contents
@@ -168,7 +177,7 @@ function updatePlayerText() {
 }
 
 //Creates a prompt for the player to choose which coin to deposit
-function depositCoin(cache: CoinCache, popup: leaflet.Popup) {
+function depositCoin(cache: CoinCache, popup: leaflet.Popup, cell: Cell) {
   //check if the player has coins to deposit
   if (playerInventory.length < 1) {
     alert("No coins to deposit");
@@ -187,6 +196,7 @@ function depositCoin(cache: CoinCache, popup: leaflet.Popup) {
     const choiceInt = Number(choice);
     if (choiceInt < playerInventory.length && choiceInt >= 0) {
       cache.coinsHeld.push(playerInventory[choiceInt]);
+      cacheMememtos.set(cellToString(cell), JSON.stringify(cache));
       playerInventory.splice(choiceInt, 1);
 
       updatePlayerText();
