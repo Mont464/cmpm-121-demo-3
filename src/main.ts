@@ -2,8 +2,9 @@ import leaflet from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./style.css";
 import "./leafletWorkaround.ts";
-import { Board } from "./board.ts";
-import { Coin, CoinCache } from "./cache.ts";
+import { Board, Cell } from "./board.ts";
+import { Coin, CoinCache, createCache } from "./cache.ts";
+import luck from "./luck.ts";
 
 const APP_NAME = "Map Cache";
 const app = document.querySelector<HTMLDivElement>("#app")!;
@@ -60,77 +61,60 @@ const playerCoordinates = gameSettings.oakesLocation; //for later use when addin
 const gameBoard = new Board(
   gameSettings.tileSize,
   gameSettings.maxCacheDistance,
-  playerCoordinates,
-  gameSettings.cacheSpawnProbability,
 );
 
-for (
-  let i = -gameBoard.tileVisibilityRadius;
-  i < gameBoard.tileVisibilityRadius;
-  i++
-) {
-  for (
-    let j = -gameBoard.tileVisibilityRadius;
-    j < gameBoard.tileVisibilityRadius;
-    j++
-  ) {
-    createCoinCache(i, j);
+const cells = gameBoard.getCellsNearPoint(playerCoordinates);
+for (const cell of cells) {
+  const key = `${cell.i},${cell.j}`;
+  if (luck(key) < gameSettings.cacheSpawnProbability) {
+    createCacheVisual(cell);
   }
 }
 
-//Creates an interactible cashe rectangle at the tile coordinate given
-function createCoinCache(i: number, j: number) {
+//Creates an interactible cache rectangle at the tile coordinate given
+function createCacheVisual(cell: Cell) {
   //finds coordinates of the cache based on the player
-  const cacheCoords = [
-    playerCoordinates.lat + i * gameSettings.tileSize,
-    playerCoordinates.lng + j * gameSettings.tileSize,
-  ];
+  const cellBounds = gameBoard.getCellBounds(cell);
 
-  const cell = gameBoard.getCellForPoint(leaflet.latLng(cacheCoords));
-  if (cell == null) {
-    return;
-  }
   //creates cache visual
-  const cacheBox = leaflet.rectangle(gameBoard.getCellBounds(cell));
+  const cacheBox = leaflet.rectangle(cellBounds);
   cacheBox.addTo(leafletMap);
-
-  cacheBox.on("click", () => openCachePopup(leaflet.latLng(cacheCoords)));
+  cacheBox.on("click", () => openCachePopup(cellBounds.getCenter()));
 }
 
-function openCachePopup(coords: leaflet.latLng): void {
+function openCachePopup(coords: leaflet.LatLng): void {
   const cell = gameBoard.getCellForPoint(coords)!;
   const newPopup = leaflet.popup();
-  updateCacheText(cell, newPopup);
+  const newCache = createCache(cell);
+  updateCacheText(newCache, newPopup, cell);
 }
 
-function updateCacheText(cell: CoinCache, popup: leaflet.Popup) {
-  const coords = cell.getCoords();
-  let cacheMessage = "<div>Cache at " +
-    coords.lat.toFixed(4) + ": " +
-    coords.lng.toFixed(4) + "<br></div>";
+function updateCacheText(cache: CoinCache, popup: leaflet.Popup, cell: Cell) {
+  let cacheMessage = "<div>Cache at " + cell.i + ": " + cell.j + "<br></div>";
 
-  for (let i = 0; i < cell.coinsHeld.length; i++) {
+  for (let i = 0; i < cache.coinsHeld.length; i++) {
     cacheMessage += `<div>${
-      cell.coinsHeld[i].id
+      cache.coinsHeld[i].id
     }</div><button id=\"collect${i}\">collect</button>`;
   }
   cacheMessage += `<br><button id=\"deposit\">deposit</button>`; //deposit button
 
-  coords.lat += 0.5 * gameSettings.tileSize;
-  coords.lng += 0.5 * gameSettings.tileSize; //moving popup location to the center of the rectangle
-  popup.setLatLng(coords).setContent(cacheMessage).openOn(leafletMap);
+  popup
+    .setLatLng(gameBoard.getCellBounds(cell).getCenter())
+    .setContent(cacheMessage)
+    .openOn(leafletMap);
 
   const popupDiv = popup.getElement();
 
   //Implements click of collect buttons
-  for (let i = 0; i < cell.coinsHeld.length; i++) {
+  for (let i = 0; i < cache.coinsHeld.length; i++) {
     popupDiv
       .querySelector<HTMLButtonElement>(`[id=\'collect${i}\']`)!
       .addEventListener("click", () =>
         ((index) => {
           if (index >= 0) {
-            playerInventory.push(cell.coinsHeld[index]);
-            cell.coinsHeld.splice(index, 1);
+            playerInventory.push(cache.coinsHeld[index]);
+            cache.coinsHeld.splice(index, 1);
             popup.close();
             updatePlayerText();
           }
@@ -140,7 +124,7 @@ function updateCacheText(cell: CoinCache, popup: leaflet.Popup) {
   //Implements click of deposit button
   popupDiv
     .querySelector<HTMLButtonElement>(`[id=\'deposit\']`)!
-    .addEventListener("click", () => depositCoin(cell, popup));
+    .addEventListener("click", () => depositCoin(cache, popup));
 }
 
 //Updates the tooltip on the player marker to show the correct inventory contents

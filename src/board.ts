@@ -1,32 +1,54 @@
 import leaflet from "leaflet";
 import "./leafletWorkaround.ts";
 import "./cache.ts";
-import { CoinCache, createCache } from "./cache.ts";
-import luck from "./luck.ts";
+
+export interface Cell {
+  readonly i: number;
+  readonly j: number;
+}
 
 export class Board {
   readonly tileWidth: number;
   readonly tileVisibilityRadius: number;
-  readonly cacheSpawnProbability: number;
+  private readonly knownCells: Map<string, Cell>;
 
-  private readonly knownCells: Map<string, CoinCache>;
-
-  constructor(
-    tileWidth: number,
-    tileVisibilityRadius: number,
-    initialCoordinates: leaflet.latLng,
-    spawnProbability: number,
-  ) {
+  constructor(tileWidth: number, tileVisibilityRadius: number) {
     this.tileWidth = tileWidth;
     this.tileVisibilityRadius = tileVisibilityRadius;
-    this.cacheSpawnProbability = spawnProbability;
-    this.knownCells = new Map<string, CoinCache>();
-
-    this.updateKnownCells(initialCoordinates);
+    this.knownCells = new Map<string, Cell>();
   }
 
-  private updateKnownCells(playerCoordinates: leaflet.LatLng) {
-    //Determine which tiles should have caches
+  private getCanonicalCell(cell: Cell): Cell {
+    const { i, j } = cell;
+    const key = [i, j].toString();
+    if (!this.knownCells.has(key)) {
+      this.knownCells.set(key, cell);
+    }
+    return this.knownCells.get(key)!;
+  }
+
+  getCellForPoint(point: leaflet.LatLng): Cell {
+    const i = Math.floor(point.lat / this.tileWidth);
+    const j = Math.floor(point.lng / this.tileWidth);
+    const tempCell: Cell = { i, j };
+    return this.getCanonicalCell(tempCell);
+  }
+
+  getCellBounds(cell: Cell): leaflet.LatLngBounds {
+    const lat = cell.i * this.tileWidth;
+    const lng = cell.j * this.tileWidth;
+    const latLng = leaflet.latLng(lat, lng);
+    const cellBounds = leaflet.latLngBounds([
+      latLng,
+      [latLng.lat + this.tileWidth, latLng.lng + this.tileWidth],
+    ]);
+
+    return cellBounds;
+  }
+
+  getCellsNearPoint(point: leaflet.LatLng): Cell[] {
+    const resultCells: Cell[] = [];
+    const originCell: Cell = this.getCellForPoint(point);
     for (
       let i = -this.tileVisibilityRadius;
       i < this.tileVisibilityRadius;
@@ -37,51 +59,10 @@ export class Board {
         j < this.tileVisibilityRadius;
         j++
       ) {
-        const lat = playerCoordinates.lat + i * this.tileWidth;
-        const lng = playerCoordinates.lng + j * this.tileWidth;
-        const coords = leaflet.latLng(lat, lng);
-        const key = coords.toString();
-        if (luck(key) < this.cacheSpawnProbability) {
-          if (!this.knownCells.has(key)) {
-            const newCache = createCache(coords);
-            this.knownCells.set(key, newCache);
-          }
-        }
+        const tmpCell: Cell = { i: originCell.i + i, j: originCell.j + j };
+        resultCells.push(this.getCanonicalCell(tmpCell));
       }
     }
-  }
-
-  /*
-  private getCanonicalCell(cell: CoinCache): CoinCache {
-    const { i, j } = cell;
-    const key = [i, j].toString();
-    // ...
-    return this.knownCells.get(key)!;
-  }*/
-
-  getCellForPoint(point: leaflet.LatLng): CoinCache | null {
-    const cell = this.knownCells.get(point.toString());
-    if (cell == undefined) {
-      return null;
-    }
-    return cell;
-  }
-
-  getCellBounds(cell: CoinCache): leaflet.LatLngBounds {
-    const cacheCoords = cell.getCoords();
-    const cacheBounds = leaflet.latLngBounds([
-      cacheCoords,
-      [cacheCoords.lat + this.tileWidth, cacheCoords.lng + this.tileWidth],
-    ]);
-
-    return cacheBounds;
-  }
-
-  /*
-  getCellsNearPoint(point: leaflet.LatLng): CoinCache[] {
-    const resultCells: CoinCache[] = [];
-    const originCell = this.getCellForPoint(point);
-    // ...
     return resultCells;
-  }*/
+  }
 }

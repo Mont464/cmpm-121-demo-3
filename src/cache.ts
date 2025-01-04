@@ -1,6 +1,6 @@
-import leaflet from "leaflet";
 import "./leafletWorkaround.ts";
 import luck from "./luck.ts";
+import { Cell } from "./board.ts";
 
 export interface Coin {
   id: string;
@@ -8,36 +8,25 @@ export interface Coin {
 
 export interface CoinCache {
   coinsHeld: Coin[];
-  getCoords(): leaflet.LatLng;
 }
 
 class cacheImpl implements CoinCache {
-  coordinates: leaflet.LatLng;
   coinsHeld: Coin[];
 
-  constructor(coords: leaflet.LatLng) {
-    this.coordinates = coords;
-
+  constructor(cell: Cell) {
     this.coinsHeld = [];
     const coinAmount = Math.ceil(
-      luck(
-        [this.coordinates.lat, this.coordinates.lng, "firstCoins"].toString(),
-      ) * 5, //FIXME
+      luck([cell.i, cell.j, "firstCoins"].toString()) * 5,
     );
     for (let a = 0; a < coinAmount; a++) {
       const newCoin: Coin = {
-        id: Math.floor(this.coordinates.lat * 1e4) + ":" +
-          Math.floor(this.coordinates.lng * 1e4) + "#" + a,
+        id: cell.i + ":" + cell.j + "#" + a,
       };
       this.coinsHeld.push(newCoin);
     }
   }
-
-  getCoords(): leaflet.LatLng {
-    return leaflet.latLng(this.coordinates.lat, this.coordinates.lng);
-  }
 }
 
-export function createCache(coords: leaflet.LatLng): CoinCache {
-  return new cacheImpl(coords);
+export function createCache(cell: Cell): CoinCache {
+  return new cacheImpl(cell);
 }
