@@ -65,4 +65,8 @@ export class Board {
     }
     return resultCells;
   }
+
+  clear() {
+    this.knownCells.clear();
+  }
 }

@@ -75,12 +75,22 @@ const gameBoard = new Board(
   gameSettings.tileSize,
   gameSettings.maxCacheDistance,
 );
+let boxArray: leaflet.Rectangle = [];
 
-const cells = gameBoard.getCellsNearPoint(playerCoordinates);
-for (const cell of cells) {
-  const key = `${cell.i},${cell.j}`;
-  if (luck(key) < gameSettings.cacheSpawnProbability) {
-    createCacheVisual(cell);
+refreshBoard();
+
+function refreshBoard() {
+  gameBoard.clear();
+  for (const box of boxArray) {
+    box.remove();
+  }
+  boxArray = [];
+  const cells = gameBoard.getCellsNearPoint(playerCoordinates);
+  for (const cell of cells) {
+    const key = `${cell.i},${cell.j}`;
+    if (luck(key) < gameSettings.cacheSpawnProbability) {
+      createCacheVisual(cell);
+    }
   }
 }
 
@@ -93,6 +103,7 @@ function createCacheVisual(cell: Cell) {
   const cacheBox = leaflet.rectangle(cellBounds);
   cacheBox.addTo(leafletMap);
   cacheBox.on("click", () => openCachePopup(cellBounds.getCenter()));
+  boxArray.push(cacheBox);
 }
 
 function openCachePopup(coords: leaflet.LatLng): void {
@@ -192,6 +203,7 @@ function movePlayer(lat: number, lng: number) {
   playerCoordinates.lng += lng * gameSettings.tileSize;
   playerLocation.setLatLng(playerCoordinates);
   leafletMap.setView(playerCoordinates, gameSettings.mapZoom);
+  refreshBoard();
 }
 
 northButton.onclick = () => {
