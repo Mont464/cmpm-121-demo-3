@@ -25,6 +25,19 @@ class settings {
   zoomable = false;
 }
 
+const northButton = document.createElement("button");
+northButton.innerHTML = "⬆️";
+app.append(northButton);
+const southButton = document.createElement("button");
+southButton.innerHTML = "⬇️";
+app.append(southButton);
+const westButton = document.createElement("button");
+westButton.innerHTML = "⬅️";
+app.append(westButton);
+const eastButton = document.createElement("button");
+eastButton.innerHTML = "➡️";
+app.append(eastButton);
+
 const gameSettings = new settings();
 
 const mapDiv = document.createElement("div");
@@ -173,3 +186,26 @@ function depositCoin(cache: CoinCache, popup: leaflet.Popup) {
     }
   }
 }
+
+function movePlayer(lat: number, lng: number) {
+  playerCoordinates.lat += lat * gameSettings.tileSize;
+  playerCoordinates.lng += lng * gameSettings.tileSize;
+  playerLocation.setLatLng(playerCoordinates);
+  leafletMap.setView(playerCoordinates, gameSettings.mapZoom);
+}
+
+northButton.onclick = () => {
+  movePlayer(1, 0);
+};
+
+southButton.onclick = () => {
+  movePlayer(-1, 0);
+};
+
+westButton.onclick = () => {
+  movePlayer(0, -1);
+};
+
+eastButton.onclick = () => {
+  movePlayer(0, 1);
+};
