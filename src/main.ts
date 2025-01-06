@@ -271,7 +271,9 @@ function depositCoin(cache: CoinCache, popup: leaflet.Popup, cell: Cell) {
 function updatePlayerVisual() {
   playerPin.setLatLng(playerCoordinates);
   playerPath.push(leaflet.latLng(playerCoordinates.lat, playerCoordinates.lng));
-  playerPathVisual.addLatLng(leaflet.latLng(playerCoordinates.lat, playerCoordinates.lng));
+  playerPathVisual.addLatLng(
+    leaflet.latLng(playerCoordinates.lat, playerCoordinates.lng),
+  );
   leafletMap.setView(playerCoordinates, gameSettings.mapZoom);
   refreshBoard();
 }
