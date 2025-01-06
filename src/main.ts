@@ -25,6 +25,7 @@ class settings {
   zoomable = false;
 }
 
+//Movement buttons
 const northButton = document.createElement("button");
 northButton.innerHTML = "⬆️";
 app.append(northButton);
@@ -38,10 +39,12 @@ const eastButton = document.createElement("button");
 eastButton.innerHTML = "➡️";
 app.append(eastButton);
 
+//Move to geolocation button
 const sensorButton = document.createElement("button");
 sensorButton.innerHTML = "🌐";
 app.append(sensorButton);
 
+//Erase game state button
 const eraseButton = document.createElement("button");
 eraseButton.innerHTML = "🚮";
 app.append(eraseButton);
@@ -268,7 +271,7 @@ function depositCoin(cache: CoinCache, popup: leaflet.Popup, cell: Cell) {
 function updatePlayerVisual() {
   playerPin.setLatLng(playerCoordinates);
   playerPath.push(leaflet.latLng(playerCoordinates.lat, playerCoordinates.lng));
-  playerPathVisual.addLatLng(playerCoordinates);
+  playerPathVisual.addLatLng(leaflet.latLng(playerCoordinates.lat, playerCoordinates.lng));
   leafletMap.setView(playerCoordinates, gameSettings.mapZoom);
   refreshBoard();
 }
