@@ -49,9 +49,15 @@ mapDiv.style.height = "80vh";
 mapDiv.style.width = "95vw";
 app.append(mapDiv);
 
+let playerInventory: Coin[] = [];
+let playerCoordinates = gameSettings.oakesLocation; //for later use when adding movement
+let cacheMememtos: Map<string, string> = new Map<string, string>();
+
+loadState();
+
 //Create map visual using Leaflet framework
 const leafletMap = leaflet.map(mapDiv, {
-  center: gameSettings.oakesLocation,
+  center: playerCoordinates,
   zoom: gameSettings.mapZoom,
   minZoom: gameSettings.mapZoom,
   maxZoom: gameSettings.mapZoom,
@@ -68,19 +74,45 @@ leaflet
   })
   .addTo(leafletMap);
 
-const playerLocation = leaflet.marker(gameSettings.oakesLocation);
+const playerLocation = leaflet.marker(playerCoordinates);
 playerLocation.bindTooltip("Current Location<br>Inventory:<br>Empty");
 playerLocation.addTo(leafletMap);
-
-const playerInventory: Coin[] = [];
-const playerCoordinates = gameSettings.oakesLocation; //for later use when adding movement
 
 const gameBoard = new Board(
   gameSettings.tileSize,
   gameSettings.maxCacheDistance,
 );
 let boxArray: leaflet.Rectangle = [];
-const cacheMememtos: Map<string, string> = new Map<string, string>();
+
+interface gameState {
+  cacheMememtos: Map<string, string>;
+  playerCoordinates: leaflet.LatLng;
+  playerInventory: Coin[];
+}
+
+function saveState() {
+  const currentState: gameState = {
+    cacheMememtos,
+    playerCoordinates,
+    playerInventory,
+  };
+  const saveEntry = JSON.stringify(currentState);
+  localStorage.setItem("gameState", saveEntry);
+}
+
+self.addEventListener("beforeunload", () => {
+  saveState();
+});
+
+function loadState() {
+  const latestSave = localStorage.getItem("gameState");
+  if (latestSave) {
+    const newState: gameState = JSON.parse(latestSave);
+    cacheMememtos = newState.cacheMememtos;
+    playerCoordinates = newState.playerCoordinates;
+    playerInventory = newState.playerInventory;
+  }
+}
 
 refreshBoard();
 
