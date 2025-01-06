@@ -25,6 +25,7 @@ class settings {
   zoomable = false;
 }
 
+//Movement buttons
 const northButton = document.createElement("button");
 northButton.innerHTML = "⬆️";
 app.append(northButton);
@@ -38,10 +39,12 @@ const eastButton = document.createElement("button");
 eastButton.innerHTML = "➡️";
 app.append(eastButton);
 
+//Move to geolocation button
 const sensorButton = document.createElement("button");
 sensorButton.innerHTML = "🌐";
 app.append(sensorButton);
 
+//Erase game state button
 const eraseButton = document.createElement("button");
 eraseButton.innerHTML = "🚮";
 app.append(eraseButton);
