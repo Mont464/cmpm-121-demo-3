@@ -38,6 +38,10 @@ const eastButton = document.createElement("button");
 eastButton.innerHTML = "➡️";
 app.append(eastButton);
 
+const sensorButton = document.createElement("button");
+sensorButton.innerHTML = "🌐";
+app.append(sensorButton);
+
 const gameSettings = new settings();
 
 const mapDiv = document.createElement("div");
@@ -231,3 +235,17 @@ westButton.onclick = () => {
 eastButton.onclick = () => {
   movePlayer(0, 1);
 };
+
+sensorButton.onclick = () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(changeGeolocation);
+  }
+};
+
+function changeGeolocation(location: GeolocationPosition) {
+  playerCoordinates.lat = location.coords.latitude;
+  playerCoordinates.lng = location.coords.longitude;
+  playerLocation.setLatLng(playerCoordinates);
+  leafletMap.setView(playerCoordinates, gameSettings.mapZoom);
+  refreshBoard();
+}
