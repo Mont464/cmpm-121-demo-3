@@ -42,6 +42,10 @@ const sensorButton = document.createElement("button");
 sensorButton.innerHTML = "🌐";
 app.append(sensorButton);
 
+const eraseButton = document.createElement("button");
+eraseButton.innerHTML = "🚮";
+app.append(eraseButton);
+
 const gameSettings = new settings();
 
 const mapDiv = document.createElement("div");
@@ -49,12 +53,19 @@ mapDiv.style.height = "80vh";
 mapDiv.style.width = "95vw";
 app.append(mapDiv);
 
-let playerInventory: Coin[] = [];
-let playerCoordinates = gameSettings.oakesLocation; //for later use when adding movement
-let cacheMememtos: Map<string, string> = new Map<string, string>();
+let playerInventory: Coin[];
+let playerCoordinates: leaflet.LatLng; //for later use when adding movement
+let cacheMememtos: Map<string, string>;
 let playerPath: leaflet.LatLng[] = [];
-playerPath.push(leaflet.latLng(playerCoordinates.lat, playerCoordinates.lng));
 
+function initializeState() {
+  playerInventory = [];
+  playerCoordinates = gameSettings.oakesLocation; //for later use when adding movement
+  cacheMememtos = new Map<string, string>();
+  playerPath = [leaflet.latLng(playerCoordinates.lat, playerCoordinates.lng)];
+}
+
+initializeState();
 loadState();
 
 //Create map visual using Leaflet framework
@@ -293,5 +304,15 @@ eastButton.onclick = () => {
 sensorButton.onclick = () => {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(changeGeolocation);
+  }
+};
+
+eraseButton.onclick = () => {
+  if (confirm("Are you sure you want to erase your current save?")) {
+    initializeState();
+    saveState(); //overrides previous save with empty save
+    updatePlayerText();
+    updatePlayerVisual();
+    playerPathVisual.setLatLngs(playerPath);
   }
 };
