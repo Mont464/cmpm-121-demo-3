@@ -52,6 +52,8 @@ app.append(mapDiv);
 let playerInventory: Coin[] = [];
 let playerCoordinates = gameSettings.oakesLocation; //for later use when adding movement
 let cacheMememtos: Map<string, string> = new Map<string, string>();
+let playerPath: leaflet.LatLng[] = [];
+playerPath.push(leaflet.latLng(playerCoordinates.lat, playerCoordinates.lng));
 
 loadState();
 
@@ -74,9 +76,13 @@ leaflet
   })
   .addTo(leafletMap);
 
-const playerLocation = leaflet.marker(playerCoordinates);
-playerLocation.bindTooltip("Current Location<br>Inventory:<br>Empty");
-playerLocation.addTo(leafletMap);
+const playerPin = leaflet.marker(playerCoordinates);
+playerPin.bindTooltip("Current Location<br>Inventory:<br>Empty");
+updatePlayerText();
+playerPin.addTo(leafletMap);
+
+const playerPathVisual = leaflet.polyline(playerPath, { color: "purple" })
+  .addTo(leafletMap);
 
 const gameBoard = new Board(
   gameSettings.tileSize,
@@ -85,16 +91,19 @@ const gameBoard = new Board(
 let boxArray: leaflet.Rectangle = [];
 
 interface gameState {
-  cacheMememtos: Map<string, string>;
+  cacheMementos: [k: string, v: string][];
   playerCoordinates: leaflet.LatLng;
   playerInventory: Coin[];
+  playerPath: leaflet.LatLng[];
 }
 
 function saveState() {
+  const cacheMementos = [...cacheMememtos]; //Maps cannot be serialized as is, need to be converted to lists of key value pairs
   const currentState: gameState = {
-    cacheMememtos,
+    cacheMementos,
     playerCoordinates,
     playerInventory,
+    playerPath,
   };
   const saveEntry = JSON.stringify(currentState);
   localStorage.setItem("gameState", saveEntry);
@@ -108,9 +117,10 @@ function loadState() {
   const latestSave = localStorage.getItem("gameState");
   if (latestSave) {
     const newState: gameState = JSON.parse(latestSave);
-    cacheMememtos = newState.cacheMememtos;
+    cacheMememtos = new Map(newState.cacheMementos);
     playerCoordinates = newState.playerCoordinates;
     playerInventory = newState.playerInventory;
+    playerPath = newState.playerPath;
   }
 }
 
@@ -207,7 +217,7 @@ function updatePlayerText() {
     inventoryText = "Empty";
   }
 
-  playerLocation.bindTooltip(
+  playerPin.bindTooltip(
     "Current Location<br>Inventory:<br>" + inventoryText,
   );
 }
@@ -244,12 +254,24 @@ function depositCoin(cache: CoinCache, popup: leaflet.Popup, cell: Cell) {
   }
 }
 
+function updatePlayerVisual() {
+  playerPin.setLatLng(playerCoordinates);
+  playerPath.push(leaflet.latLng(playerCoordinates.lat, playerCoordinates.lng));
+  playerPathVisual.addLatLng(playerCoordinates);
+  leafletMap.setView(playerCoordinates, gameSettings.mapZoom);
+  refreshBoard();
+}
+
 function movePlayer(lat: number, lng: number) {
   playerCoordinates.lat += lat * gameSettings.tileSize;
   playerCoordinates.lng += lng * gameSettings.tileSize;
-  playerLocation.setLatLng(playerCoordinates);
-  leafletMap.setView(playerCoordinates, gameSettings.mapZoom);
-  refreshBoard();
+  updatePlayerVisual();
+}
+
+function changeGeolocation(location: GeolocationPosition) {
+  playerCoordinates.lat = location.coords.latitude;
+  playerCoordinates.lng = location.coords.longitude;
+  updatePlayerVisual();
 }
 
 northButton.onclick = () => {
@@ -273,11 +295,3 @@ sensorButton.onclick = () => {
     navigator.geolocation.getCurrentPosition(changeGeolocation);
   }
 };
-
-function changeGeolocation(location: GeolocationPosition) {
-  playerCoordinates.lat = location.coords.latitude;
-  playerCoordinates.lng = location.coords.longitude;
-  playerLocation.setLatLng(playerCoordinates);
-  leafletMap.setView(playerCoordinates, gameSettings.mapZoom);
-  refreshBoard();
-}
